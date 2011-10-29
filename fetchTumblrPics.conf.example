@@ -1,0 +1,44 @@
+# Configuration Example for fetchTumblrPics
+
+<FTP:global>
+  # Here, define global params if you need them:
+  # ouputDir is a directory to store fetched files in. This can be over-
+  #  written job by job.
+  outputDir = tmp/
+  # fetchedFile is a file to store the names of fetched pictures in it, in
+  #  order not to get them tiwce. Note: This file might get big quick, as
+  #  there is no removal from it at the moment.
+  #  This can be overwritten job by job.
+  fetchedFile = fetchTumblrPics.fetched
+  # global debug flag. If set, all jobs will run in debug-mode, generating
+  # a lot of information about the state of the script.
+  debug = 0
+</FTP:global>
+
+<FTP:default>
+  # This is the default option for jobs that don't have information about
+  #  their working in rss, html or api mode.
+  # Don't change this, except of tumblrs api not working. Then note: RSS is
+  #  not complete most of the time and might be seriously late! Use API or
+  #  (RSS and HTML)!
+  mode = api
+</FTP:default>
+
+<FTP:list>
+  # This is a list of streams. Just paste the streams username (as in
+  #  http://<darklove>.tumblr.com) here. Depending on the "mode" setting,
+  #  URIs are build with trailing '/rss' or '/api/read'. 
+darklove
+sabins
+sexysubmittedself
+</FTP:list>
+
+<finenudes>
+  # You might specify jobs that don't meet global or default settings like
+  #  this. Just add a new node and enter this jobs specs, they'll override
+  #  other settings.
+  debug = 1
+  mode = rss
+  fetchedFile = /dev/null
+  outputDir = /storage/somewhat
+</finenudes>
