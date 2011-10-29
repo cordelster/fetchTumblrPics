@@ -14,9 +14,6 @@ my $configFile = $opt_d || 'fetchTumblrPics.conf';
 
 $| = 1;
 
-my @urls;
-my %fetched;
-
 my $conf = new Config::General($configFile) or die $!;
 my %config = $conf->getall;
 
