@@ -1,8 +1,10 @@
 fetchTumblrPics - Fetches pictures from tumblr-streams via RSS, HTML, API.
 
 Files:
-fetchTumblrPics.pl - the script itself. Call with -d <file> to use a
-	configuration file other than fetchTumblrPics.conf. 
+fetchTumblrPics.pl - the script itself. Call with "-d <file>" to use a
+	configuration file other than fetchTumblrPics.conf. Use "-i" to
+	get an initial dump of all files that have been posted. Use
+	"-c <streamname>" to get an initial dump of the specified stream. 
 fetchTumblrPics.fetched - file to store the URIs we've already fetched.
 	Note: It's a known TODO to apply timestamps to keep this "cache"
 	small. It'll get quite big at the moment, as every file is an entry.
@@ -10,7 +12,8 @@ fetchTumblrPics.conf - Configuration file. See fetchTumblrPics.conf.example
 	for an example!
 
 Usage:
-Trigger the script by cron as often as you need to get the complete stream.
+Run with -i or -c to get a base dump. Then trigger the script by cron as
+often as you need to get the complete stream.
 File won't be downloaded twice as long as they're mentioned in
 fetchTumblrPics.fetched.
 We do honor environment proxy settings like
