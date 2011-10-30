@@ -60,81 +60,86 @@ sub getFeed {
 	my ($start,$baseUrl,$num);
 	$baseUrl = $url;
 	$num = 50;
-CATCH:	my $ua = LWP::UserAgent->new;
-	$ua->timeout(30);
-	$ua->env_proxy;
-	if ($mode =~ /api/) {
-		$url = $baseUrl . "?type=photo&num=$num&start=$start";	
-	}
-	my $resp = $ua->get($url);
-	if (!$resp->is_success) {
-		print "Some Error on " . $url . " - skipping! ";
-		print $resp->status_line;
-	} else {
-		binmode (STDOUT,":utf8");
-		switch($mode) {
-			case 'rss' {
-				print "\nParsing RSS: $url!\n";
-				my $parser = XML::LibXML->new();
-				my $doc = $parser->parse_string($resp->content);
-				my $root = $doc->documentElement();
-				my $xcont = XML::LibXML::XPathContext->new($root);
-				my $imgnodes = $xcont->findnodes('//description');
-				foreach my $itemnode ($imgnodes->get_nodelist) {
-					my $descnd = $itemnode->firstChild;
-					if (!defined($descnd)) { next; }
-					my $desc = $descnd->getValue;
-					if ($desc =~ /http.*"/x) {
-						$desc =~ /(http.*?)"/x;
-						my $getFile = $1;
-						push @{$self->{'get'}},$getFile;
-					}
-				}
-			}
-			case 'html' {
-				print "\nParsing HTML: $url!\n";
-				my $tree = HTML::TreeBuilder->new_from_content($resp->content);
-				foreach my $img ($tree->look_down(_tag=>'img')) {
-					$img->look_down( 
-						sub { 
-							my $src = $_[0]->attr('src');
-							push @{$self->{'get'}},$src;
+	$start = 0;
+CATCH:	while (1) {
+		my $ua = LWP::UserAgent->new;
+		$ua->timeout(30);
+		$ua->env_proxy;
+		if ($mode =~ /api/) {
+			$url = $baseUrl . "?type=photo&num=$num&start=$start";	
+		}
+		my $resp = $ua->get($url);
+		if (!$resp->is_success) {
+			print "Some Error on " . $url . " - skipping! ";
+			print $resp->status_line;
+		} else {
+			binmode (STDOUT,":utf8");
+			switch($mode) {
+				case 'rss' {
+					print "\nParsing RSS: $url!\n";
+					my $parser = XML::LibXML->new();
+					my $doc = $parser->parse_string($resp->content);
+					my $root = $doc->documentElement();
+					my $xcont = XML::LibXML::XPathContext->new($root);
+					my $imgnodes = $xcont->findnodes('//description');
+					foreach my $itemnode ($imgnodes->get_nodelist) {
+						my $descnd = $itemnode->firstChild;
+						if (!defined($descnd)) { next; }
+						my $desc = $descnd->getValue;
+						if ($desc =~ /http.*"/x) {
+							$desc =~ /(http.*?)"/x;
+							my $getFile = $1;
+							push @{$self->{'get'}},$getFile;
+							last CATCH;
 						}
-					)
-				}
-			}
-			case 'api' {
-				print "\nParsing the api output: $url\n";
-				my $parser = XML::LibXML->new();
-				my $doc = $parser->parse_string($resp->content);
-				my $root = $doc->documentElement();
-				my $xcont = XML::LibXML::XPathContext->new($root);
-				my $imgnodes = $xcont->findnodes('//photo-url[@max-width="1280"]');
-				if (!defined($imgnodes)) {
-					warn("No big image found on $url!\n");
-				}
-				foreach my $itemnode ($imgnodes->get_nodelist) {
-					my $imagenode = $itemnode->firstChild;
-					my $imglink = $imagenode->getValue;
-					if (!defined($imglink)) { next; }
-					if ($imglink =~ /http.*/) {
-						push @{$self->{'get'}},$imglink;
 					}
 				}
-				if (defined($self->{'job'})->getParam('do_init')) {
-					my $countNode = $xcont->findnodes('//posts[@total]');
-					my $count = ($countNode->get_nodelist)[0];
-					my $maxVal = $count->getValue;
-					if (($start + $num) < $maxVal) {
-						print "\ninit mode: running next iteration: " . $start + $num . "\n";
-						sleep 2; # TODO: remove
-						$start = $start + $num;
-						next CATCH;
+				case 'html' {
+					print "\nParsing HTML: $url!\n";
+					my $tree = HTML::TreeBuilder->new_from_content($resp->content);
+					foreach my $img ($tree->look_down(_tag=>'img')) {
+						$img->look_down( 
+							sub { 
+								my $src = $_[0]->attr('src');
+								push @{$self->{'get'}},$src;
+								last CATCH;
+							}
+						)
 					}
 				}
-			}
-			else {
-				# Whatever!
+				case 'api' {
+					print "\nParsing the api output: $url\n";
+					my $parser = XML::LibXML->new();
+					my $doc = $parser->parse_string($resp->content);
+					my $root = $doc->documentElement();
+					my $xcont = XML::LibXML::XPathContext->new($root);
+					my $imgnodes = $xcont->findnodes('//photo-url[@max-width="1280"]');
+					if (!defined($imgnodes)) {
+						warn("No big image found on $url!\n");
+					}
+					foreach my $itemnode ($imgnodes->get_nodelist) {
+						my $imagenode = $itemnode->firstChild;
+						my $imglink = $imagenode->getValue;
+						if (!defined($imglink)) { next; }
+						if ($imglink =~ /http.*/) {
+							push @{$self->{'get'}},$imglink;
+						}
+					}
+					if (defined(($self->{'job'})->getParam('do_init'))) {
+						my $countNode = $xcont->findnodes('//posts');
+						my $count = (($countNode->get_nodelist)[0])->findvalue('@total');
+						if (($start + $num) < $count) {
+							print "\ninit mode: running next iteration: " . ($start + $num) . " until $count\n";
+							sleep 2; # TODO: remove
+							$start = $start + $num;
+							next CATCH;
+						}
+					}
+					last CATCH;
+				}
+				else {
+					# Whatever!
+				}
 			}
 		}
 	}

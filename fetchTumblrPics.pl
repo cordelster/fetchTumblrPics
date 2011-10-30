@@ -24,13 +24,20 @@ my $confObj = new fetchTumblrPics::ConfObj;
 $confObj->setConf(\%config);
 
 if (defined($catchUp)) {
-	$confObj->prepare();
-	$confObj->fillJob($catchUp);
-	$confObj->set('do_init',1);
-	print "Job " . $catchUp . " ready for catchUp.\n";
-        my $getObj = new fetchTumblrPics::GetObj;
-        $getObj->setJob($confObj);
-        $getObj->run();
+	my @confJobs = $confObj->getJobs();
+	foreach my $confJob (@confJobs) {
+		if ($confJob eq $catchUp) {
+			$confObj->prepare();
+			$confObj->fillJob($catchUp);
+			$confObj->set('do_init',1);
+			print "Job " . $catchUp . " ready for catchUp.\n";
+			my $getObj = new fetchTumblrPics::GetObj;
+			$getObj->setJob($confObj);
+			$getObj->run();
+			exit;
+		}
+	}
+	print "Cannot find job $catchUp\n";
 } else {
 	foreach my $job ($confObj->getJobs()) {
 		$confObj->prepare();
