@@ -57,9 +57,15 @@ sub getFeed {
 		warn ("Mode for Job " . $url . " is not valid, using API!\n");
 		$mode = 'api';
 	}
-	my $ua = LWP::UserAgent->new;
+	my ($start,$baseUrl,$num);
+	$baseUrl = $url;
+	$num = 50;
+CATCH:	my $ua = LWP::UserAgent->new;
 	$ua->timeout(30);
 	$ua->env_proxy;
+	if ($mode =~ /api/) {
+		$url = $baseUrl . "?type=photo&num=$num&start=$start";	
+	}
 	my $resp = $ua->get($url);
 	if (!$resp->is_success) {
 		print "Some Error on " . $url . " - skipping! ";
@@ -113,6 +119,17 @@ sub getFeed {
 					if (!defined($imglink)) { next; }
 					if ($imglink =~ /http.*/) {
 						push @{$self->{'get'}},$imglink;
+					}
+				}
+				if (defined($self->{'job'})->getParam('do_init')) {
+					my $countNode = $xcont->findnodes('//posts[@total]');
+					my $count = ($countNode->get_nodelist)[0];
+					my $maxVal = $count->getValue;
+					if (($start + $num) < $maxVal) {
+						print "\ninit mode: running next iteration: " . $start + $num . "\n";
+						sleep 2; # TODO: remove
+						$start = $start + $num;
+						next CATCH;
 					}
 				}
 			}

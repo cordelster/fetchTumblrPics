@@ -14,7 +14,19 @@ sub new {
   $self->{'fetched'}	= undef;
   $self->{'debug'}      = undef;
   $self->{'conf'}       = undef;
+  $self->{'do_init'}	= undef;
   bless $self,ref($classname)||$classname;
+}
+
+sub set {
+  my $self = shift;
+  my $var = shift;
+  my $to = shift;
+  return unless (defined($var) && defined($to));
+  if (exists($self->{$var})) {
+    $self->{$var} = $to;
+  }
+  return;
 }
 
 sub getParam {
