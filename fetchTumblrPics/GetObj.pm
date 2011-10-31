@@ -72,6 +72,7 @@ CATCH:	while (1) {
 		if (!$resp->is_success) {
 			print "Some Error on " . $url . " - skipping! ";
 			print $resp->status_line;
+			last CATCH;
 		} else {
 			binmode (STDOUT,":utf8");
 			switch($mode) {
@@ -139,6 +140,7 @@ CATCH:	while (1) {
 				}
 				else {
 					# Whatever!
+					last CATCH;
 				}
 			}
 		}
@@ -177,7 +179,7 @@ sub getContent {
 			} else {
 				my $fileName = $getFile;
 				$fileName =~ s/^.*\///;
-				if (-e $fileName) {
+				if (-e ($self->{'job'})->getParam('outputDir') . $fileName) {
 					print "Error: " . $fileName ." already exists!";
 				} else {
 					open(O,">",($self->{'job'})->getParam('outputDir') . $fileName) or die $!;
