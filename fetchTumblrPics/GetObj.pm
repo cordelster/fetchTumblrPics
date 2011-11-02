@@ -182,7 +182,7 @@ sub getContent {
 				if (-e ($self->{'job'})->getParam('outputDir') . $fileName) {
 					print "Error: " . $fileName ." already exists!";
 				} else {
-					open(O,">",($self->{'job'})->getParam('outputDir') . $fileName) or die $!;
+					open(O,">",($self->{'job'})->getParam('outputDir') . $fileName) or die "Saving " . ($self->{'job'})->getParam('outputDir') . $fileName .": ". $!;
 					print O $picr->content;
 					close O;
 					($self->{'job'})->getParam('debug') && print $fileName . " written!\n";

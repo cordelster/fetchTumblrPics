@@ -2,6 +2,7 @@ package fetchTumblrPics::ConfObj;
 
 use strict;
 use warnings;
+use File::Path qw(mkpath);
 
 our $VERSION = "0.1";
 
@@ -49,12 +50,17 @@ sub fillGlobals {
     $self->{'fetched'}	= $self->{'conf'}{'FTP:global'}{'fetchedFile'};
   } 
   if (!-e $self->{'conf'}{'FTP:global'}{'fetchedFile'}) {
-    warn "You set a fetchedFile (".$self->{'conf'}{'FTP:global'}{'fetchedFile'}.") that does not exist! Hope we can create it later...";
+    warn "You set a fetchedFile (".$self->{'conf'}{'FTP:global'}{'fetchedFile'}.") that does not exist! Hopefully we can create it later...";
+  }
+  if (defined($self->{'conf'}{'FTP:global'}{'outputDir'}) && $self->{'conf'}{'FTP:global'}{'outputDir'} !~ /\/$/) {
+    $self->{'conf'}{'FTP:global'}{'outputDir'} .= '/';
   }
   if (defined($self->{'conf'}{'FTP:global'}{'outputDir'}) && -d $self->{'conf'}{'FTP:global'}{'outputDir'}) {
     $self->{'outputDir'} = $self->{'conf'}{'FTP:global'}{'outputDir'};
   } elsif (!-d $self->{'conf'}{'FTP:global'}{'outputDir'}) {
-    warn "You set a outputDir (".$self->{'conf'}{'FTP:global'}{'outputDir'}.") that does not exist!";
+    warn "You set a outputDir (".$self->{'conf'}{'FTP:global'}{'outputDir'}.") that does not exist - trying to create it:";
+    mkpath([$self->{'conf'}{'FTP:global'}{'outputDir'}],1,0700) or die "Cannot create " . $self->{'conf'}{'FTP:global'}{'outputDir'} . ": " . $!;
+    $self->{'outputDir'} = $self->{'conf'}{'FTP:global'}{'outputDir'};
   }
   $self->{'debug'} = $self->{'conf'}{'FTP:global'}{'debug'};
 }
@@ -91,6 +97,15 @@ sub fillJob {
   }
   foreach my $key (keys %jobParams) {
     if (defined($self->{'conf'}{$job}{$key})) {
+      if ($key =~ /outputDir/) {
+        if($self->{'conf'}{$job}{$key} !~ m;/$;) {
+          $self->{'conf'}{$job}{$key} .= '/';
+        }
+        if(!-d $self->{'conf'}{$job}{$key}) {
+          warn "You set a outputDir (".$self->{'conf'}{$job}{$key}.") that does not exist - trying to create it:";
+          mkpath([$self->{'conf'}{$job}{$key}],1,0700) or die "Cannot create " . $self->{'conf'}{$job}{$key} . ": " . $!;
+        }
+      }
       # Please no overwrite "self" in config :)
       $self->{$key} = $self->{'conf'}{$job}{$key};
     }
