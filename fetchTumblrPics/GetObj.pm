@@ -172,23 +172,35 @@ sub getContent {
 		}
 		if (exists($self->{'fetched'}{$getFile})) {
 			($self->{'job'})->getParam('debug') && print $getFile . " is already fetched!\n";
+			next;
 		} else {
+			my $fileName = $getFile;
+			$fileName =~ s/^.*\///;
+			if (-e ($self->{'job'})->getParam('outputDir') . $fileName) {
+				# Here we got a problem. Picturesets mean same name, different caption.
+				my $tmpName = $getFile;
+				$tmpName =~ s/^.*\/(\d+)\/.*?$/$1/;
+				# TODO: remove
+				if ($tmpName > 1) {
+					# Ok, it's a set!
+					($self->{'job'})->getParam('debug') && print $fileName . " is part of a pic set!\n";
+					$fileName .= "_" . $tmpName;
+				} else {
+					($self->{'job'})->getParam('debug') && print "Error: " . $fileName ." already exists!";
+					next;
+				}
+			}
 			my $picr = $ua->get($getFile);
 			if (!$picr->is_success) {
 				print "Error on " . $getFile . ": " . $picr->status_line . "\n";
+				next;
 			} else {
-				my $fileName = $getFile;
-				$fileName =~ s/^.*\///;
-				if (-e ($self->{'job'})->getParam('outputDir') . $fileName) {
-					print "Error: " . $fileName ." already exists!";
-				} else {
-					open(O,">",($self->{'job'})->getParam('outputDir') . $fileName) or die "Saving " . ($self->{'job'})->getParam('outputDir') . $fileName .": ". $!;
-					print O $picr->content;
-					close O;
-					($self->{'job'})->getParam('debug') && print $fileName . " written!\n";
-					($self->{'job'})->getParam('debug') || print ".";
-					$self->{'fetched'}{$getFile} = 1;
-				}
+				open(O,">",($self->{'job'})->getParam('outputDir') . $fileName) or die "Saving " . ($self->{'job'})->getParam('outputDir') . $fileName .": ". $!;
+				print O $picr->content;
+				close O;
+				($self->{'job'})->getParam('debug') && print $fileName . " written!\n";
+				($self->{'job'})->getParam('debug') || print ".";
+				$self->{'fetched'}{$getFile} = 1;
 			}
 		}
 	}
