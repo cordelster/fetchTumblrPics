@@ -181,7 +181,7 @@ sub getContent {
 				my $tmpName = $getFile;
 				$tmpName =~ s/^.*\/(\d+)\/.*?$/$1/;
 				# TODO: remove
-				if ($tmpName > 1) {
+				if ($tmpName ne $getFile && $tmpName =~ /\d+/ && $tmpName > 1) {
 					# Ok, it's a set!
 					($self->{'job'})->getParam('debug') && print $fileName . " is part of a pic set!\n";
 					$fileName .= "_" . $tmpName;
