@@ -5,6 +5,8 @@ fetchTumblrPics.pl - the script itself. Call with "-d <file>" to use a
 	configuration file other than fetchTumblrPics.conf. Use "-i" to
 	get an initial dump of all files that have been posted. Use
 	"-c <streamname>" to get an initial dump of the specified stream. 
+        "-r <streamname>" runs a single job. Without -c/-r all jobs con-
+	figured will be run.
 fetchTumblrPics.fetched - file to store the URIs we've already fetched.
 	Note: It's a known TODO to apply timestamps to keep this "cache"
 	small. It'll get quite big at the moment, as every file is an entry.
@@ -23,4 +25,4 @@ License:
 There is no license. Do whatever you want. Please, if you're going to im-
 prove it, drop me a note and send patches ;-)
 
-eljudni@gmail.com, Oct 2011
+eljudni@gmail.com, Oct 2011, lup Feb 2012
