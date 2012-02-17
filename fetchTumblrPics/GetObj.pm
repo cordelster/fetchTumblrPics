@@ -162,6 +162,7 @@ sub getContent {
 	my $ua = LWP::UserAgent->new;
 	$ua->timeout(30);
 	$ua->env_proxy;
+	my $counter = 1;
 	foreach my $getFile (@{$self->{'get'}}) {
 		if ($getFile !~ /(\.jpg|\.gif|\.jpeg|\.png|\.JPG|\.GIF|\.JPEG|\.PNG|\.tumblr\.com.*photo.*)$/) {
 			($self->{'job'})->getParam('debug') && print $getFile . " maybe is no picture!\n";
@@ -192,15 +193,19 @@ sub getContent {
 			}
 			my $picr = $ua->get($getFile);
 			if (!$picr->is_success) {
-				print "Error on " . $getFile . ": " . $picr->status_line . "\n";
+				print "Error on " . $counter . ":" . $getFile . ": " . $picr->status_line . "\n";
 				next;
 			} else {
 				open(O,">",($self->{'job'})->getParam('outputDir') . $fileName) or die "Saving " . ($self->{'job'})->getParam('outputDir') . $fileName .": ". $!;
 				print O $picr->content;
 				close O;
 				($self->{'job'})->getParam('debug') && print $fileName . " written!\n";
-				($self->{'job'})->getParam('debug') || print ".";
 				$self->{'fetched'}{$getFile} = 1;
+				if ($counter == 1) {
+					print $counter++;
+				} else {
+					print "\b" x length($counter) . $counter++;
+				}
 			}
 		}
 	}
