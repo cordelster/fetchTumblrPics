@@ -3,7 +3,6 @@ package fetchTumblrPics::GetObj;
 use 5.005;
 use strict;
 use warnings;
-use Switch;
 use LWP::UserAgent;
 use XML::LibXML;
 use HTML::TreeBuilder;
@@ -75,8 +74,8 @@ CATCH:	while (1) {
 			last CATCH;
 		} else {
 			binmode (STDOUT,":utf8");
-			switch($mode) {
-				case 'rss' {
+			for ($mode) {
+				if (/rss/) {
 					print "\nParsing RSS: $url!\n";
 					my $parser = XML::LibXML->new();
 					my $doc = $parser->parse_string($resp->content);
@@ -95,7 +94,7 @@ CATCH:	while (1) {
 						}
 					}
 				}
-				case 'html' {
+				elsif (/html/) {
 					print "\nParsing HTML: $url!\n";
 					my $tree = HTML::TreeBuilder->new_from_content($resp->content);
 					foreach my $img ($tree->look_down(_tag=>'img')) {
@@ -108,7 +107,7 @@ CATCH:	while (1) {
 						)
 					}
 				}
-				case 'api' {
+				elsif (/api/) {
 					print "\nParsing the api output: $url\n";
 					my $parser = XML::LibXML->new();
 					my $doc = $parser->parse_string($resp->content);
